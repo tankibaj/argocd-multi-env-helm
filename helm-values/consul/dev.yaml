@@ -1,0 +1,16 @@
+global:
+  name: consul
+
+server:
+  storage: 2Gi # Dev uses lower storage
+
+ui:
+  enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: public
+    pathType: Prefix
+    hosts:
+      - host: dev-consul.naim.run
+        paths:
+          - /

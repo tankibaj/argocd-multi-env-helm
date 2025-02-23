@@ -1,0 +1,7 @@
+{
+  "chart_version": "1.4.1",
+  "cluster": {
+    "name": "development",
+    "env": "dev"
+  }
+}

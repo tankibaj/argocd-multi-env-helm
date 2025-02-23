@@ -1,0 +1,154 @@
+fullnameOverride: argocd
+
+global:
+  # -- Default domain used by all components. Used for ingresses, certificates, SSO, notifications, etc.
+  domain: cd1-playground.onepraxis.cgm.ag
+
+#  # -- Number of old deployment ReplicaSets to retain. The rest will be garbage collected.
+#  revisionHistoryLimit: 5
+
+  # -- Deployment strategy for the all deployed Deployments
+#  deploymentStrategy:
+#     type: RollingUpdate
+#     rollingUpdate:
+#       maxSurge: 25%
+#     maxUnavailable: 25%
+
+#  image:
+#    repository: thenaim/argocd
+#    tag: "v2.10.7"
+#  imagePullSecrets:
+#    - name: registry-credentials
+#  securityContext:
+#    runAsUser: 999
+#    runAsGroup: 999
+#    fsGroup: 999
+
+crds:
+  install: true     # -- Install and upgrade CRDs
+  keep: true        # -- Keep CRDs on chart uninstall
+
+configs:
+  cm:
+    # -- Create the argocd-cm configmap for [declarative setup]
+    create: true
+    # -- Enable exec feature in Argo UI
+    ## Ref: https://argo-cd.readthedocs.io/en/latest/operator-manual/rbac/#exec-resource
+    exec.enabled: true
+    # -- Enable local admin user
+    ## Ref: https://argo-cd.readthedocs.io/en/latest/faq/#how-to-disable-admin-user
+    admin.enabled: true
+
+    # Enables application status badge feature
+    #    statusbadge.enabled: "true"
+
+    # -- Add an argocd local users/accounts.
+    ## -- The local users/accounts feature serves two main use-cases:
+    ### -- 1. Auth tokens for Argo CD management automation. It is possible to configure an API account with limited permissions and generate an authentication token.
+    ### -- 2. Additional users for a very small team where use of SSO integration might be considered an overkill.
+    # -- https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#local-usersaccounts-v15
+    # -- https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#manage-users
+#    accounts.naim: apiKey # apiKey, login
+
+    # -- OIDC configuration as an alternative to dex (optional).
+#    oidc.config: |
+#      name: Keycloak
+#      issuer: https://sso.local.naim.run/realms/internal
+#      clientID: argocd
+#      clientSecret: $oidc.keycloak.clientSecret
+#      requestedIDTokenClaims:
+#        groups:
+#          essential: true
+#      requestedScopes:
+#        - openid
+#        - profile
+#        - email
+#        - groups
+
+  # -- Argo CD configuration parameters
+  params:
+    server.insecure: true # -- Many redirects with NGINX ingress | https://github.com/argoproj/argo-cd/issues/2953#issuecomment-643042447 | Run server without TLS
+    applicationsetcontroller.enable.progressive.syncs: true # -- # -- Enables use of the Progressive Syncs capability | https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Progressive-Syncs/#enabling-progressive-syncs
+
+  # -- Argo CD RBAC policy configuration
+  ## -- Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/rbac.md
+  rbac:
+    # -- Create the argocd-rbac-cm configmap with ([Argo CD RBAC policy]) definitions.
+    # If false, it is expected the configmap will be created by something else.
+    # Argo CD will not work if there is no configmap created with the name above.
+    create: true
+    # -- The name of the default role which Argo CD will fall back to, when authorizing API requests (optional).
+    # -- If omitted or empty, users may be still be able to login, but will see no apps, projects, etc...
+    policy.default: role:readonly
+    # -- File containing user-defined policies and role definitions.
+    policy.csv: |
+      p, role:developer, applications, *, */*, allow
+      p, role:developer, clusters, get, *, allow
+      p, role:developer, repositories, get, *, allow
+      p, role:developer, repositories, create, *, allow
+      p, role:developer, repositories, update, *, allow
+      p, role:developer, repositories, delete, *, allow
+      g, admin, role:admin
+      g, developer, role:developer
+      g, naim, role:developer
+#  clusterCredentials:
+#    development:
+#      server: https://172.16.100.69:16443
+#      config:
+#        bearerToken: ""
+#        tlsClientConfig:
+#          insecure: false
+#          caData: "=="
+#    staging:
+#      server: https://172.16.100.70:16443
+#      config:
+#        bearerToken: ""
+#        tlsClientConfig:
+#          insecure: false
+#          caData: "=="
+  #    - name: eks-production
+  #      server: https://4E342B66C6683AF5F6.gr7.eu-central-1.eks.amazonaws.com
+  #      config:
+  #        awsAuthConfig:
+  #          clusterName: eks-production
+  #          roleARN: arn:aws:iam::111111111111:role/deployer
+  #        tlsClientConfig:
+  #          caData: "LS0tLS1CRUJUSUZJQ0FURS0tLdRXhNakE1TXpkQvegotLS0tLUVORCBDFRJeU1EURVS0tCg=="
+  #    - name: eks-development
+  #      server: https://21B62814D9F2DFD2138604A513D6B6D1.gr7.eu-central-1.eks.amazonaws.com
+  #      config:
+  #        awsAuthConfig:
+  #          clusterName: eks-development
+  #          roleARN: arn:aws:iam::222222222222:role/deployer
+  #        tlsClientConfig:
+  #          caData: "LS0tLS1CRS0tLdRXhNakE1DFRJeU1UJUSUZJQ0FURTXpkQvegotLS0tLUVORCBEURVS0tCg=="
+  repositories:
+    argocd-multi-env-helm:
+      name: argocd-multi-env-helm
+      type: git
+      url: https://github.com/tankibaj/argocd-multi-env-helm.git
+
+controller:
+  serviceAccount:
+    create: true
+    name: argocd-application-controller
+#    annotations: { eks.amazonaws.com/role-arn: arn:aws:iam::000000000000:role/eks-management-irsa-argocd }
+#    automountServiceAccountToken: true
+
+server:
+  serviceAccount:
+    create: true
+    name: argocd-server
+  #    annotations: { eks.amazonaws.com/role-arn: arn:aws:iam::000000000000:role/eks-management-irsa-argocd }
+  #    automountServiceAccountToken: true
+  extraArgs:
+    - --insecure
+  ingress:
+    enabled: true
+    ingressClassName: webapprouting.kubernetes.azure.com
+    hostname: cd1-playground.onepraxis.cgm.ag
+
+#repoServer:
+#  envFrom:
+#    - secretRef:
+#        name: argocd-aws-credentials # -- AWS CLI credentials to access KMS key for SOPS encryption and decryption

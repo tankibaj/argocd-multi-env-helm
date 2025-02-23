@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: consul
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+        revision: main  # Single branch for all environments
+        files:
+          - path: "env-config/consul/**/config.json"
+  template:
+    metadata:
+      name: 'consul-{{ .cluster.env }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://helm.releases.hashicorp.com
+          chart: consul
+          targetRevision: '{{ .chart_version }}'
+          helm:
+            valueFiles:
+              - $values/helm-values/consul/{{ .cluster.env }}.yaml  # Dedicated values file per env
+        - repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+          targetRevision: main
+          ref: values
+
+      destination:
+        name: '{{ .cluster.name }}'
+        namespace: consul
+
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true
