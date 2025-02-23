@@ -38,3 +38,11 @@ spec:
         automated:
           prune: true
           selfHeal: true
+      # Ignore differences in the MutatingWebhookConfiguration resource
+      ignoreDifferences:
+        - group: admissionregistration.k8s.io
+          kind: MutatingWebhookConfiguration
+          name: consul-connect-injector
+          # jsonPointers specify which fields to ignore in the diff
+          jsonPointers:
+            - /webhooks/0/clientConfig/caBundle
