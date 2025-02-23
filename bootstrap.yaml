@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: OneTimeBootstrap
+  name: one-time-bootstrap
   namespace: argocd
   labels:
     name: bootstrap
