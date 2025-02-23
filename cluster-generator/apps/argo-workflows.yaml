@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argo-workflows
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - "missingkey=error"
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: dev
+        values:
+          revision: "0.45.7"
+          helmValues: "dev"
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+        values:
+          revision: "0.40.7"
+          helmValues: "prod"
+  template:
+    metadata:
+      # The application name will be based on the cluster name.
+      name: argo-workflows
+    spec:
+      project: default
+      source:
+        repoURL: https://argoproj.github.io/argo-helm
+        chart: argo-workflows
+        # The revision is set from the generator’s values field.
+        targetRevision: '{{ .values.revision }}'
+        helm:
+          # Dynamically choose the Helm values file based on the cluster's env.
+          valueFiles:
+            - $values/helm-values/argo-workflows/{{ .values.helmValues }}.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: argo
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

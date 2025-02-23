@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: consul
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - "missingkey=error"
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            env: dev
+        values:
+          revision: "1.6.1"
+          helmValues: "dev"
+    - clusters:
+        selector:
+          matchLabels:
+            env: prod
+        values:
+          revision: "1.4.0"
+          helmValues: "prod"
+  template:
+    metadata:
+      # The application name will be based on the cluster name.
+      name: consul
+    spec:
+      project: default
+      source:
+        repoURL: https://helm.releases.hashicorp.com
+        chart: consul
+        # The revision is set from the generator’s values field.
+        targetRevision: '{{ .values.revision }}'
+        helm:
+          # Dynamically choose the Helm values file based on the cluster's env.
+          valueFiles:
+            - $values/helm-values/consul/{{ .values.helmValues }}.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: consul
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

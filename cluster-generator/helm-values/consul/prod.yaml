@@ -1,0 +1,16 @@
+global:
+  name: consul
+
+server:
+  storage: 10Gi  # Production has more storage
+
+ui:
+  enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: public
+    pathType: Prefix
+    hosts:
+      - host: prod-consul.naim.run
+        paths:
+          - /
