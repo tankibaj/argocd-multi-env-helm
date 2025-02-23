@@ -1,0 +1,7 @@
+{
+  "chart_version": "0.40.7",
+  "cluster": {
+    "name": "production",
+    "env": "prod"
+  }
+}

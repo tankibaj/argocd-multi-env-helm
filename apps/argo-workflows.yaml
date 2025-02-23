@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argo-workflows
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+        revision: main  # Single branch for all environments
+        files:
+          - path: "env-config/argo-workflows/**/config.json"
+  template:
+    metadata:
+      name: 'argo-workflows-{{ .cluster.env }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://argoproj.github.io/argo-helm
+          chart: argo-workflows
+          targetRevision: '{{ .chart_version }}'
+          helm:
+            valueFiles:
+              - $values/helm-values/argo-workflows/{{ .cluster.env }}.yaml  # Dedicated values file per env
+        - repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+          targetRevision: main
+          ref: values
+
+      destination:
+        name: '{{ .cluster.name }}'
+        namespace: argo
+
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true
