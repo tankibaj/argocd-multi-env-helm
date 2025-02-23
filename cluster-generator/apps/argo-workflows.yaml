@@ -28,15 +28,18 @@ spec:
       name: argo-workflows
     spec:
       project: default
-      source:
-        repoURL: https://argoproj.github.io/argo-helm
-        chart: argo-workflows
-        # The revision is set from the generator’s values field.
-        targetRevision: '{{ .values.revision }}'
-        helm:
-          # Dynamically choose the Helm values file based on the cluster's env.
-          valueFiles:
-            - $values/cluster-generator/helm-values/argo-workflows/{{ .values.helmValues }}.yaml
+      sources:
+        - repoURL: https://argoproj.github.io/argo-helm
+          chart: argo-workflows
+          # The revision is set from the generator’s values field.
+          targetRevision: '{{ .values.revision }}'
+          helm:
+            # Dynamically choose the Helm values file based on the cluster's env.
+            valueFiles:
+              - $values/cluster-generator/helm-values/argo-workflows/{{ .values.helmValues }}.yaml
+        - repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+          targetRevision: main
+          ref: values
       destination:
         server: https://kubernetes.default.svc
         namespace: argo

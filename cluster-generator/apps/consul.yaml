@@ -28,15 +28,18 @@ spec:
       name: consul
     spec:
       project: default
-      source:
-        repoURL: https://helm.releases.hashicorp.com
-        chart: consul
-        # The revision is set from the generator’s values field.
-        targetRevision: '{{ .values.revision }}'
-        helm:
-          # Dynamically choose the Helm values file based on the cluster's env.
-          valueFiles:
-            - $values/cluster-generator/helm-values/consul/{{ .values.helmValues }}.yaml
+      sources:
+        - repoURL: https://helm.releases.hashicorp.com
+          chart: argo-workflows
+          # The revision is set from the generator’s values field.
+          targetRevision: '{{ .values.revision }}'
+          helm:
+            # Dynamically choose the Helm values file based on the cluster's env.
+            valueFiles:
+              - $values/cluster-generator/helm-values/consul/{{ .values.helmValues }}.yaml
+        - repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+          targetRevision: main
+          ref: values
       destination:
         server: https://kubernetes.default.svc
         namespace: consul
