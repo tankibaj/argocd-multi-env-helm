@@ -1,5 +1,5 @@
 {
-  "chart_version": "1.4.0",
+  "chart_version": "1.4.1",
   "cluster": {
     "name": "production",
     "env": "prod"
