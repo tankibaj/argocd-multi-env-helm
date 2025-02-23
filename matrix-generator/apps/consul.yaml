@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: consul
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - "missingkey=error"
+  generators:
+    - matrix:
+        generators:
+          # Git file generator: Reads config JSON files
+          - git:
+              repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+              revision: main
+              files:
+                - path: "matrix-generator/env-config/consul/config-*.json"
+          # Only match clusters with env label that matches the config file's env
+          - clusters:
+              selector:
+                matchLabels:
+                  env: '{{ .env }}'
+  template:
+    metadata:
+      name: 'consul-{{.env}}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://helm.releases.hashicorp.com
+          chart: consul
+          targetRevision: '{{ .chart_version }}'
+          helm:
+            valueFiles:
+              - $values/matrix-generator/env-config/consul/values-{{ .env }}.yaml
+        - repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{.server}}'
+        namespace: consul
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
