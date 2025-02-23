@@ -7,7 +7,7 @@ server:
 ui:
   enabled: true
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: public
     pathType: Prefix
     hosts:
