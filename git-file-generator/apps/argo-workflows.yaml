@@ -11,7 +11,7 @@ spec:
         repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
         revision: main  # Single branch for all environments
         files:
-          - path: "env-config/argo-workflows/**/config.json"
+          - path: "git-file-generator/env-config/argo-workflows/**/config.json"
   template:
     metadata:
       name: 'argo-workflows-{{ .cluster.env }}'
@@ -23,7 +23,7 @@ spec:
           targetRevision: '{{ .chart_version }}'
           helm:
             valueFiles:
-              - $values/helm-values/argo-workflows/{{ .cluster.env }}.yaml  # Dedicated values file per env
+              - $values/git-file-generator/helm-values/argo-workflows/{{ .cluster.env }}.yaml  # Dedicated values file per env
         - repoURL: https://github.com/tankibaj/argocd-multi-env-helm.git
           targetRevision: main
           ref: values
