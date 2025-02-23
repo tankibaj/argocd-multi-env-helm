@@ -30,7 +30,7 @@ spec:
       project: default
       sources:
         - repoURL: https://helm.releases.hashicorp.com
-          chart: argo-workflows
+          chart: consul
           # The revision is set from the generator’s values field.
           targetRevision: '{{ .values.revision }}'
           helm:
