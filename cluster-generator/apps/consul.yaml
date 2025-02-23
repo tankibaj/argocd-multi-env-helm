@@ -36,7 +36,7 @@ spec:
         helm:
           # Dynamically choose the Helm values file based on the cluster's env.
           valueFiles:
-            - $values/helm-values/consul/{{ .values.helmValues }}.yaml
+            - $values/cluster-generator/helm-values/consul/{{ .values.helmValues }}.yaml
       destination:
         server: https://kubernetes.default.svc
         namespace: consul
